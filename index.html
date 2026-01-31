@@ -12,22 +12,22 @@
     <style>
         /* --- DESIGN VARIABLEN --- */
         :root {
-            /* Light Mode (Standard) Variablen */
-            --bg-color: #f2f2f7;          /* Helles Grau (wie iOS Settings) */
-            --card-bg: #ffffff;           /* Reines Weiß */
-            --text-primary: #1c1c1e;      /* Fast Schwarz */
-            --text-secondary: #8e8e93;    /* Grau für Infos */
-            --accent: #007aff;            /* Modernes Blau */
-            --danger: #ff3b30;            /* Rot */
-            --success: #34c759;           /* Grün */
-            --input-bg: #e5e5ea;          /* Eingabefelder Hintergrund */
+            /* Light Mode */
+            --bg-color: #f2f2f7;
+            --card-bg: #ffffff;
+            --text-primary: #1c1c1e;
+            --text-secondary: #8e8e93;
+            --accent: #007aff;
+            --danger: #ff3b30;
+            --warning: #ff9500;
+            --success: #34c759;
+            --input-bg: #e5e5ea;
             --shadow: 0 4px 12px rgba(0,0,0,0.05);
-            --radius-l: 20px;             /* Große Ecken (Karten) */
-            --radius-m: 14px;             /* Mittlere Ecken (Buttons) */
-            --radius-s: 10px;             /* Kleine Ecken */
+            --radius-l: 20px;
+            --radius-m: 14px;
         }
 
-        /* Dark Mode Variablen */
+        /* Dark Mode */
         [data-theme="dark"] {
             --bg-color: #000000;
             --card-bg: #1c1c1e;
@@ -35,23 +35,22 @@
             --text-secondary: #98989f;
             --accent: #0a84ff;
             --danger: #ff453a;
+            --warning: #ff9f0a;
             --success: #30d158;
             --input-bg: #2c2c2e;
             --shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
 
-        /* --- BASIS LAYOUT --- */
         body {
             background-color: var(--bg-color);
             color: var(--text-primary);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             margin: 0;
             padding: 0;
-            padding-bottom: 100px; /* Platz für Footer */
-            transition: background-color 0.3s ease, color 0.3s ease;
+            padding-bottom: 120px; /* Mehr Platz unten für die Leiste */
+            transition: background-color 0.3s ease;
         }
 
-        /* --- HEADER --- */
         header {
             display: flex;
             justify-content: space-between;
@@ -63,12 +62,7 @@
             z-index: 100;
         }
 
-        h1 {
-            margin: 0;
-            font-size: 1.8rem;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-        }
+        h1 { margin: 0; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px; }
 
         .theme-toggle {
             background: var(--input-bg);
@@ -79,12 +73,7 @@
             color: var(--text-primary);
             font-size: 1.1rem;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s;
         }
-        .theme-toggle:active { transform: scale(0.9); }
 
         /* --- FILTER TABS --- */
         .filters {
@@ -101,17 +90,16 @@
             color: var(--text-secondary);
             border: none;
             padding: 8px 18px;
-            border-radius: 30px; /* Pillenform */
+            border-radius: 30px;
             font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
             box-shadow: var(--shadow);
-            transition: all 0.2s;
             white-space: nowrap;
         }
         .filter-btn.active {
-            background: var(--text-primary); /* Schwarz im Light, Weiß im Dark */
-            color: var(--bg-color); /* Inverser Text */
+            background: var(--text-primary);
+            color: var(--bg-color);
         }
 
         /* --- LISTE --- */
@@ -126,37 +114,40 @@
             align-items: center;
             justify-content: space-between;
             box-shadow: var(--shadow);
-            transition: transform 0.2s, opacity 0.3s;
         }
 
         .card.completed {
             opacity: 0.5;
             box-shadow: none;
-            background-color: transparent;
             border: 1px dashed var(--text-secondary);
+            background: transparent;
         }
 
         .info-col {
             flex-grow: 1;
             text-align: center;
-            padding: 0 10px;
+            padding: 0 5px;
+            overflow: hidden; /* Damit lange Namen nicht das Layout sprengen */
         }
         .name {
             display: block;
             font-weight: 600;
-            font-size: 1.05rem;
+            font-size: 1rem;
             margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .count {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             font-weight: 800;
             color: var(--accent);
         }
 
         /* --- BUTTONS --- */
         .btn-icon {
-            width: 44px;
-            height: 44px;
+            width: 42px;
+            height: 42px;
             border: none;
             border-radius: var(--radius-m);
             font-size: 1.1rem;
@@ -164,67 +155,58 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: background 0.1s;
+            transition: transform 0.1s;
+        }
+        .btn-icon:active { transform: scale(0.95); }
+
+        /* Linke Gruppe (3 Buttons) */
+        .left-group {
+            display: flex; 
+            align-items: center; 
+            gap: 4px; /* Kleiner Abstand zwischen den Buttons */
         }
 
-        /* Linke Gruppe */
-        .btn-trash { background: transparent; color: var(--text-secondary); width: 30px;}
-        .btn-trash:active { color: var(--danger); }
+        .btn-delete { background: transparent; color: var(--text-secondary); width: 32px; font-size: 0.9rem;}
+        .btn-delete:active { color: var(--danger); }
+
+        .btn-reset { background: transparent; color: var(--text-secondary); width: 32px; font-size: 0.9rem;}
+        .btn-reset:active { color: var(--warning); }
         
-        .btn-minus { background: var(--input-bg); color: var(--text-primary); margin-left: 5px; }
-        .btn-minus:active { background: #d1d1d6; }
+        .btn-minus { background: var(--input-bg); color: var(--text-primary); }
 
         /* Rechte Gruppe */
-        .btn-plus { background: var(--accent); color: white; margin-right: 5px; }
-        .btn-plus:active { opacity: 0.8; }
+        .right-group { display: flex; gap: 5px; }
 
+        .btn-plus { background: var(--accent); color: white; }
         .btn-check { background: var(--input-bg); color: var(--text-secondary); }
         .btn-check.is-done { background: var(--success); color: white; }
 
         /* --- ADD NEW PANEL --- */
         .add-panel {
             position: fixed;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
+            bottom: 20px; left: 20px; right: 20px;
             background: var(--card-bg);
             padding: 10px;
             border-radius: var(--radius-l);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            display: flex;
-            gap: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            display: flex; gap: 10px;
             z-index: 200;
         }
 
         .input-clean {
-            background: var(--input-bg);
-            border: none;
-            color: var(--text-primary);
-            padding: 12px;
-            border-radius: var(--radius-m);
-            flex-grow: 1;
-            font-size: 1rem;
-            outline: none;
+            background: var(--input-bg); border: none; color: var(--text-primary);
+            padding: 12px; border-radius: var(--radius-m); flex-grow: 1; outline: none;
         }
         
         .input-select {
-            background: var(--input-bg);
-            border: none;
-            color: var(--text-primary);
-            padding: 0 10px;
-            border-radius: var(--radius-m);
-            outline: none;
-            width: 90px;
+            background: var(--input-bg); border: none; color: var(--text-primary);
+            padding: 0 10px; border-radius: var(--radius-m); outline: none; width: 100px;
         }
 
         .btn-add {
-            background: var(--text-primary);
-            color: var(--bg-color);
-            border: none;
-            width: 50px;
-            border-radius: var(--radius-m);
-            font-size: 1.2rem;
-            cursor: pointer;
+            background: var(--text-primary); color: var(--bg-color);
+            border: none; width: 50px; border-radius: var(--radius-m);
+            font-size: 1.2rem; cursor: pointer;
         }
     </style>
 </head>
@@ -252,9 +234,12 @@
     <div class="item-list">
         <div v-for="item in filteredItems" :key="item.id" class="card" :class="{ completed: item.completed }">
             
-            <div style="display:flex; align-items: center;">
-                <button class="btn-icon btn-trash" @click="resetCount(item)">
-                    <i class="fas fa-rotate-left" style="font-size: 0.9rem;"></i>
+            <div class="left-group">
+                <button class="btn-icon btn-delete" @click="deleteItem(item)">
+                    <i class="fas fa-trash"></i>
+                </button>
+                <button class="btn-icon btn-reset" @click="resetCount(item)">
+                    <i class="fas fa-rotate-left"></i>
                 </button>
                 <button class="btn-icon btn-minus" @click="decrement(item)">
                     <i class="fas fa-minus"></i>
@@ -267,7 +252,7 @@
                 <span class="count" v-else style="color:var(--success); font-size:1rem;">Fertig</span>
             </div>
 
-            <div style="display:flex;">
+            <div class="right-group">
                 <button class="btn-icon btn-plus" @click="increment(item)">
                     <i class="fas fa-plus"></i>
                 </button>
@@ -280,12 +265,12 @@
 
         <div v-if="filteredItems.length === 0" style="text-align:center; padding: 40px; color:var(--text-secondary);">
             <i class="fas fa-glass-cheers" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.5;"></i>
-            <p>Nichts hier.</p>
+            <p>Nichts in dieser Kategorie.</p>
         </div>
     </div>
 
     <div class="add-panel">
-        <input type="text" v-model="newItemName" placeholder="Getränk..." class="input-clean">
+        <input type="text" v-model="newItemName" placeholder="Neu..." class="input-clean">
         <select v-model="newItemCat" class="input-select">
             <option v-for="cat in categories.filter(c => c !== 'Alle')" :value="cat">{{ cat }}</option>
         </select>
@@ -301,25 +286,22 @@
     createApp({
         data() {
             return {
-                isDark: true, // Standardmäßig Dark Mode
+                isDark: true, 
                 currentCategory: 'Alle',
-                categories: ['Alle', 'Alkohol', 'Alkoholfrei', 'Flaschen 1L', 'Klein 0.2L', 'Zubehör'],
+                // Hier ist jetzt 'Spirituosen' dabei:
+                categories: ['Alle', 'Spirituosen', 'Alkohol', 'Alkoholfrei', 'Flaschen 1L', 'Klein 0.2L', 'Zubehör'],
                 newItemName: '',
-                newItemCat: 'Alkohol',
+                newItemCat: 'Spirituosen', // Standardauswahl beim Erstellen
                 items: [
                     { id: 1, name: 'Corona', count: 0, category: 'Alkohol', completed: false },
-                    { id: 2, name: 'Warsteiner', count: 0, category: 'Alkohol', completed: false },
+                    { id: 2, name: 'Vodka Gorbatschow', count: 0, category: 'Spirituosen', completed: false },
                     { id: 3, name: 'Red Bull', count: 0, category: 'Alkoholfrei', completed: false },
-                    { id: 4, name: 'Vodka 1L', count: 0, category: 'Flaschen 1L', completed: false },
-                    { id: 5, name: 'Wasser Still', count: 0, category: 'Alkoholfrei', completed: false },
                 ]
             }
         },
         computed: {
             filteredItems() {
-                if (this.currentCategory === 'Alle') {
-                    return this.items;
-                }
+                if (this.currentCategory === 'Alle') return this.items;
                 return this.items.filter(item => item.category === this.currentCategory);
             }
         },
@@ -327,15 +309,12 @@
             toggleTheme() {
                 this.isDark = !this.isDark;
                 this.applyTheme();
-                this.saveData(); // Speichert auch die Theme-Einstellung
+                this.saveData();
             },
             applyTheme() {
                 const htmlTag = document.documentElement;
-                if (this.isDark) {
-                    htmlTag.setAttribute('data-theme', 'dark');
-                } else {
-                    htmlTag.removeAttribute('data-theme');
-                }
+                if (this.isDark) htmlTag.setAttribute('data-theme', 'dark');
+                else htmlTag.removeAttribute('data-theme');
             },
             increment(item) {
                 item.count++;
@@ -348,12 +327,16 @@
                 this.saveData();
             },
             resetCount(item) {
-                // Kleines Vibrations-Feedback bei Handys (wenn unterstützt)
-                if(navigator.vibrate) navigator.vibrate(50);
-                
                 item.count = 0;
                 item.completed = false;
                 this.saveData();
+            },
+            deleteItem(item) {
+                // Sicherheitsabfrage
+                if(confirm(`Möchtest du "${item.name}" wirklich komplett aus der Liste löschen?`)) {
+                    this.items = this.items.filter(i => i.id !== item.id);
+                    this.saveData();
+                }
             },
             toggleComplete(item) {
                 item.completed = !item.completed;
@@ -361,7 +344,6 @@
             },
             addNewItem() {
                 if (this.newItemName.trim() === '') return;
-                
                 this.items.push({
                     id: Date.now(), 
                     name: this.newItemName,
@@ -369,27 +351,21 @@
                     category: this.newItemCat,
                     completed: false
                 });
-                
                 this.newItemName = '';
                 this.saveData();
             },
             saveData() {
-                const dataToSave = {
-                    items: this.items,
-                    theme: this.isDark
-                };
-                localStorage.setItem('miaStockData_v2', JSON.stringify(dataToSave));
+                const dataToSave = { items: this.items, theme: this.isDark };
+                localStorage.setItem('miaStockData_v3', JSON.stringify(dataToSave));
             },
             loadData() {
-                const saved = localStorage.getItem('miaStockData_v2');
+                const saved = localStorage.getItem('miaStockData_v3');
                 if (saved) {
                     const parsed = JSON.parse(saved);
-                    // Check ob es das alte Format oder das neue mit Theme ist
                     if (parsed.items) {
                         this.items = parsed.items;
                         this.isDark = parsed.theme;
                     } else {
-                        // Fallback für alte Datenstruktur
                         this.items = parsed;
                     }
                 }
