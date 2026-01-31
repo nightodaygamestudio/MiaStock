@@ -1,159 +1,230 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mia Stock</title>
+    <link rel="manifest" href="manifest.json">
+    
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
     <style>
+        /* --- DESIGN VARIABLEN --- */
         :root {
-            --bg-color: #121212;
-            --card-color: #1e1e1e;
-            --text-color: #ffffff;
-            --accent-color: #d600ff; /* Neon Pink/Lila für Mia Vibe */
-            --success-color: #00e676;
-            --danger-color: #ff1744;
+            /* Light Mode (Standard) Variablen */
+            --bg-color: #f2f2f7;          /* Helles Grau (wie iOS Settings) */
+            --card-bg: #ffffff;           /* Reines Weiß */
+            --text-primary: #1c1c1e;      /* Fast Schwarz */
+            --text-secondary: #8e8e93;    /* Grau für Infos */
+            --accent: #007aff;            /* Modernes Blau */
+            --danger: #ff3b30;            /* Rot */
+            --success: #34c759;           /* Grün */
+            --input-bg: #e5e5ea;          /* Eingabefelder Hintergrund */
+            --shadow: 0 4px 12px rgba(0,0,0,0.05);
+            --radius-l: 20px;             /* Große Ecken (Karten) */
+            --radius-m: 14px;             /* Mittlere Ecken (Buttons) */
+            --radius-s: 10px;             /* Kleine Ecken */
         }
 
+        /* Dark Mode Variablen */
+        [data-theme="dark"] {
+            --bg-color: #000000;
+            --card-bg: #1c1c1e;
+            --text-primary: #ffffff;
+            --text-secondary: #98989f;
+            --accent: #0a84ff;
+            --danger: #ff453a;
+            --success: #30d158;
+            --input-bg: #2c2c2e;
+            --shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        /* --- BASIS LAYOUT --- */
         body {
             background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             margin: 0;
             padding: 0;
-            padding-bottom: 80px; /* Platz für den Footer */
+            padding-bottom: 100px; /* Platz für Footer */
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
+        /* --- HEADER --- */
         header {
-            background: linear-gradient(135deg, #2a0845, #6441a5);
-            padding: 20px;
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 20px 10px 20px;
+            background-color: var(--bg-color);
             position: sticky;
             top: 0;
             z-index: 100;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
-        h1 { margin: 0; font-size: 1.5rem; letter-spacing: 1px; text-transform: uppercase; }
+        h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
 
-        /* Filter Tabs */
+        .theme-toggle {
+            background: var(--input-bg);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+        .theme-toggle:active { transform: scale(0.9); }
+
+        /* --- FILTER TABS --- */
         .filters {
             display: flex;
             overflow-x: auto;
-            padding: 15px 10px;
+            padding: 10px 20px;
             gap: 10px;
-            background: #181818;
-            scrollbar-width: none; /* Firefox */
+            scrollbar-width: none;
         }
-        .filters::-webkit-scrollbar { display: none; /* Chrome */ }
+        .filters::-webkit-scrollbar { display: none; }
 
         .filter-btn {
-            background: #333;
-            color: #aaa;
+            background: var(--card-bg);
+            color: var(--text-secondary);
             border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            white-space: nowrap;
+            padding: 8px 18px;
+            border-radius: 30px; /* Pillenform */
             font-size: 0.9rem;
+            font-weight: 600;
             cursor: pointer;
+            box-shadow: var(--shadow);
             transition: all 0.2s;
+            white-space: nowrap;
         }
         .filter-btn.active {
-            background: var(--accent-color);
-            color: white;
-            font-weight: bold;
+            background: var(--text-primary); /* Schwarz im Light, Weiß im Dark */
+            color: var(--bg-color); /* Inverser Text */
         }
 
-        /* Liste */
-        .item-list {
-            padding: 10px;
-        }
+        /* --- LISTE --- */
+        .item-list { padding: 10px 20px; }
 
-        .drink-card {
-            background-color: var(--card-color);
-            margin-bottom: 12px;
-            border-radius: 12px;
-            padding: 10px;
+        .card {
+            background-color: var(--card-bg);
+            margin-bottom: 15px;
+            border-radius: var(--radius-l);
+            padding: 12px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            border: 1px solid transparent;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s, opacity 0.3s;
         }
 
-        .drink-card.completed {
+        .card.completed {
             opacity: 0.5;
-            border-color: var(--success-color);
+            box-shadow: none;
+            background-color: transparent;
+            border: 1px dashed var(--text-secondary);
         }
 
-        /* Mittlerer Teil: Name & Counter */
-        .info-section {
+        .info-col {
             flex-grow: 1;
             text-align: center;
-            padding: 0 5px;
+            padding: 0 10px;
         }
-        .drink-name {
-            font-weight: bold;
+        .name {
             display: block;
-            font-size: 1rem;
-            margin-bottom: 4px;
+            font-weight: 600;
+            font-size: 1.05rem;
+            margin-bottom: 2px;
         }
-        .drink-count {
-            font-size: 1.4rem;
-            color: var(--accent-color);
+        .count {
+            font-size: 1.2rem;
             font-weight: 800;
+            color: var(--accent);
         }
 
-        /* Buttons */
-        .btn {
-            width: 45px;
-            height: 45px;
+        /* --- BUTTONS --- */
+        .btn-icon {
+            width: 44px;
+            height: 44px;
             border: none;
-            border-radius: 10px;
-            font-size: 1.2rem;
+            border-radius: var(--radius-m);
+            font-size: 1.1rem;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            color: white;
-            touch-action: manipulation; /* Verbessert Touch-Reaktion */
+            transition: background 0.1s;
         }
-        
-        .btn-reset { background-color: #333; color: #ff5252; margin-right: 5px; }
-        .btn-minus { background-color: #424242; }
-        .btn-plus { background-color: var(--accent-color); }
-        .btn-done { background-color: #333; color: var(--success-color); margin-left: 5px; }
-        .btn-done.is-done { background-color: var(--success-color); color: #121212; }
 
-        /* Neues Item hinzufügen */
+        /* Linke Gruppe */
+        .btn-trash { background: transparent; color: var(--text-secondary); width: 30px;}
+        .btn-trash:active { color: var(--danger); }
+        
+        .btn-minus { background: var(--input-bg); color: var(--text-primary); margin-left: 5px; }
+        .btn-minus:active { background: #d1d1d6; }
+
+        /* Rechte Gruppe */
+        .btn-plus { background: var(--accent); color: white; margin-right: 5px; }
+        .btn-plus:active { opacity: 0.8; }
+
+        .btn-check { background: var(--input-bg); color: var(--text-secondary); }
+        .btn-check.is-done { background: var(--success); color: white; }
+
+        /* --- ADD NEW PANEL --- */
         .add-panel {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: #252525;
-            padding: 15px;
-            box-sizing: border-box;
-            border-top: 1px solid #444;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            padding: 10px;
+            border-radius: var(--radius-l);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             display: flex;
             gap: 10px;
+            z-index: 200;
         }
-        .input-dark {
-            background: #121212;
-            border: 1px solid #444;
-            color: white;
-            padding: 10px;
-            border-radius: 8px;
+
+        .input-clean {
+            background: var(--input-bg);
+            border: none;
+            color: var(--text-primary);
+            padding: 12px;
+            border-radius: var(--radius-m);
             flex-grow: 1;
+            font-size: 1rem;
+            outline: none;
         }
+        
+        .input-select {
+            background: var(--input-bg);
+            border: none;
+            color: var(--text-primary);
+            padding: 0 10px;
+            border-radius: var(--radius-m);
+            outline: none;
+            width: 90px;
+        }
+
         .btn-add {
-            background: var(--success-color);
-            color: #000;
-            font-weight: bold;
-            width: auto;
-            padding: 0 20px;
+            background: var(--text-primary);
+            color: var(--bg-color);
+            border: none;
+            width: 50px;
+            border-radius: var(--radius-m);
+            font-size: 1.2rem;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -161,7 +232,10 @@
 
 <div id="app">
     <header>
-        <h1><i class="fas fa-cocktail"></i> Mia Stock</h1>
+        <h1>Mia Stock</h1>
+        <button class="theme-toggle" @click="toggleTheme">
+            <i class="fas" :class="isDark ? 'fa-sun' : 'fa-moon'"></i>
+        </button>
     </header>
 
     <div class="filters">
@@ -176,44 +250,46 @@
     </div>
 
     <div class="item-list">
-        <div v-for="item in filteredItems" :key="item.id" class="drink-card" :class="{ completed: item.completed }">
+        <div v-for="item in filteredItems" :key="item.id" class="card" :class="{ completed: item.completed }">
             
-            <div style="display:flex; gap:5px;">
-                <button class="btn btn-reset" @click="resetCount(item)">
-                    <i class="fas fa-trash"></i>
+            <div style="display:flex; align-items: center;">
+                <button class="btn-icon btn-trash" @click="resetCount(item)">
+                    <i class="fas fa-rotate-left" style="font-size: 0.9rem;"></i>
                 </button>
-                <button class="btn btn-minus" @click="decrement(item)">
+                <button class="btn-icon btn-minus" @click="decrement(item)">
                     <i class="fas fa-minus"></i>
                 </button>
             </div>
 
-            <div class="info-section">
-                <span class="drink-name">{{ item.name }}</span>
-                <span class="drink-count">{{ item.count }}x</span>
+            <div class="info-col">
+                <span class="name">{{ item.name }}</span>
+                <span class="count" v-if="!item.completed">{{ item.count }}</span>
+                <span class="count" v-else style="color:var(--success); font-size:1rem;">Fertig</span>
             </div>
 
-            <div style="display:flex; gap:5px;">
-                <button class="btn btn-plus" @click="increment(item)">
+            <div style="display:flex;">
+                <button class="btn-icon btn-plus" @click="increment(item)">
                     <i class="fas fa-plus"></i>
                 </button>
-                <button class="btn btn-done" :class="{ 'is-done': item.completed }" @click="toggleComplete(item)">
+                <button class="btn-icon btn-check" :class="{ 'is-done': item.completed }" @click="toggleComplete(item)">
                     <i class="fas fa-check"></i>
                 </button>
             </div>
 
         </div>
 
-        <div v-if="filteredItems.length === 0" style="text-align:center; color:#666; margin-top:30px;">
-            <p>Keine Getränke in dieser Kategorie.</p>
+        <div v-if="filteredItems.length === 0" style="text-align:center; padding: 40px; color:var(--text-secondary);">
+            <i class="fas fa-glass-cheers" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.5;"></i>
+            <p>Nichts hier.</p>
         </div>
     </div>
 
     <div class="add-panel">
-        <input type="text" v-model="newItemName" placeholder="Neues Getränk..." class="input-dark">
-        <select v-model="newItemCat" class="input-dark" style="flex-grow:0; width: 100px;">
+        <input type="text" v-model="newItemName" placeholder="Getränk..." class="input-clean">
+        <select v-model="newItemCat" class="input-select">
             <option v-for="cat in categories.filter(c => c !== 'Alle')" :value="cat">{{ cat }}</option>
         </select>
-        <button class="btn btn-add" @click="addNewItem">
+        <button class="btn-add" @click="addNewItem">
             <i class="fas fa-plus"></i>
         </button>
     </div>
@@ -225,12 +301,12 @@
     createApp({
         data() {
             return {
+                isDark: true, // Standardmäßig Dark Mode
                 currentCategory: 'Alle',
                 categories: ['Alle', 'Alkohol', 'Alkoholfrei', 'Flaschen 1L', 'Klein 0.2L', 'Zubehör'],
                 newItemName: '',
                 newItemCat: 'Alkohol',
                 items: [
-                    // Start-Daten (Beispiel)
                     { id: 1, name: 'Corona', count: 0, category: 'Alkohol', completed: false },
                     { id: 2, name: 'Warsteiner', count: 0, category: 'Alkohol', completed: false },
                     { id: 3, name: 'Red Bull', count: 0, category: 'Alkoholfrei', completed: false },
@@ -248,9 +324,22 @@
             }
         },
         methods: {
+            toggleTheme() {
+                this.isDark = !this.isDark;
+                this.applyTheme();
+                this.saveData(); // Speichert auch die Theme-Einstellung
+            },
+            applyTheme() {
+                const htmlTag = document.documentElement;
+                if (this.isDark) {
+                    htmlTag.setAttribute('data-theme', 'dark');
+                } else {
+                    htmlTag.removeAttribute('data-theme');
+                }
+            },
             increment(item) {
                 item.count++;
-                item.completed = false; // Wenn man was ändert, ist es nicht mehr "fertig"
+                item.completed = false; 
                 this.saveData();
             },
             decrement(item) {
@@ -259,11 +348,12 @@
                 this.saveData();
             },
             resetCount(item) {
-                if(confirm('Zähler für ' + item.name + ' wirklich auf 0 setzen?')) {
-                    item.count = 0;
-                    item.completed = false;
-                    this.saveData();
-                }
+                // Kleines Vibrations-Feedback bei Handys (wenn unterstützt)
+                if(navigator.vibrate) navigator.vibrate(50);
+                
+                item.count = 0;
+                item.completed = false;
+                this.saveData();
             },
             toggleComplete(item) {
                 item.completed = !item.completed;
@@ -273,7 +363,7 @@
                 if (this.newItemName.trim() === '') return;
                 
                 this.items.push({
-                    id: Date.now(), // Einzigartige ID basierend auf Zeit
+                    id: Date.now(), 
                     name: this.newItemName,
                     count: 0,
                     category: this.newItemCat,
@@ -282,17 +372,28 @@
                 
                 this.newItemName = '';
                 this.saveData();
-                alert('Gespeichert!');
             },
             saveData() {
-                // Speichert die Liste im Browser des Handys
-                localStorage.setItem('miaStockData', JSON.stringify(this.items));
+                const dataToSave = {
+                    items: this.items,
+                    theme: this.isDark
+                };
+                localStorage.setItem('miaStockData_v2', JSON.stringify(dataToSave));
             },
             loadData() {
-                const saved = localStorage.getItem('miaStockData');
+                const saved = localStorage.getItem('miaStockData_v2');
                 if (saved) {
-                    this.items = JSON.parse(saved);
+                    const parsed = JSON.parse(saved);
+                    // Check ob es das alte Format oder das neue mit Theme ist
+                    if (parsed.items) {
+                        this.items = parsed.items;
+                        this.isDark = parsed.theme;
+                    } else {
+                        // Fallback für alte Datenstruktur
+                        this.items = parsed;
+                    }
                 }
+                this.applyTheme();
             }
         },
         mounted() {
