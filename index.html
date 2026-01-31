@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mia Stock</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-color: #1e1e1e;
+            --text-color: #ffffff;
+            --accent-color: #d600ff; /* Neon Pink/Lila für Mia Vibe */
+            --success-color: #00e676;
+            --danger-color: #ff1744;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            padding-bottom: 80px; /* Platz für den Footer */
+        }
+
+        header {
+            background: linear-gradient(135deg, #2a0845, #6441a5);
+            padding: 20px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        h1 { margin: 0; font-size: 1.5rem; letter-spacing: 1px; text-transform: uppercase; }
+
+        /* Filter Tabs */
+        .filters {
+            display: flex;
+            overflow-x: auto;
+            padding: 15px 10px;
+            gap: 10px;
+            background: #181818;
+            scrollbar-width: none; /* Firefox */
+        }
+        .filters::-webkit-scrollbar { display: none; /* Chrome */ }
+
+        .filter-btn {
+            background: #333;
+            color: #aaa;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            white-space: nowrap;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-btn.active {
+            background: var(--accent-color);
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Liste */
+        .item-list {
+            padding: 10px;
+        }
+
+        .drink-card {
+            background-color: var(--card-color);
+            margin-bottom: 12px;
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            border: 1px solid transparent;
+        }
+
+        .drink-card.completed {
+            opacity: 0.5;
+            border-color: var(--success-color);
+        }
+
+        /* Mittlerer Teil: Name & Counter */
+        .info-section {
+            flex-grow: 1;
+            text-align: center;
+            padding: 0 5px;
+        }
+        .drink-name {
+            font-weight: bold;
+            display: block;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+        .drink-count {
+            font-size: 1.4rem;
+            color: var(--accent-color);
+            font-weight: 800;
+        }
+
+        /* Buttons */
+        .btn {
+            width: 45px;
+            height: 45px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            touch-action: manipulation; /* Verbessert Touch-Reaktion */
+        }
+        
+        .btn-reset { background-color: #333; color: #ff5252; margin-right: 5px; }
+        .btn-minus { background-color: #424242; }
+        .btn-plus { background-color: var(--accent-color); }
+        .btn-done { background-color: #333; color: var(--success-color); margin-left: 5px; }
+        .btn-done.is-done { background-color: var(--success-color); color: #121212; }
+
+        /* Neues Item hinzufügen */
+        .add-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #252525;
+            padding: 15px;
+            box-sizing: border-box;
+            border-top: 1px solid #444;
+            display: flex;
+            gap: 10px;
+        }
+        .input-dark {
+            background: #121212;
+            border: 1px solid #444;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            flex-grow: 1;
+        }
+        .btn-add {
+            background: var(--success-color);
+            color: #000;
+            font-weight: bold;
+            width: auto;
+            padding: 0 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <header>
+        <h1><i class="fas fa-cocktail"></i> Mia Stock</h1>
+    </header>
+
+    <div class="filters">
+        <button 
+            v-for="cat in categories" 
+            :key="cat"
+            class="filter-btn"
+            :class="{ active: currentCategory === cat }"
+            @click="currentCategory = cat">
+            {{ cat }}
+        </button>
+    </div>
+
+    <div class="item-list">
+        <div v-for="item in filteredItems" :key="item.id" class="drink-card" :class="{ completed: item.completed }">
+            
+            <div style="display:flex; gap:5px;">
+                <button class="btn btn-reset" @click="resetCount(item)">
+                    <i class="fas fa-trash"></i>
+                </button>
+                <button class="btn btn-minus" @click="decrement(item)">
+                    <i class="fas fa-minus"></i>
+                </button>
+            </div>
+
+            <div class="info-section">
+                <span class="drink-name">{{ item.name }}</span>
+                <span class="drink-count">{{ item.count }}x</span>
+            </div>
+
+            <div style="display:flex; gap:5px;">
+                <button class="btn btn-plus" @click="increment(item)">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <button class="btn btn-done" :class="{ 'is-done': item.completed }" @click="toggleComplete(item)">
+                    <i class="fas fa-check"></i>
+                </button>
+            </div>
+
+        </div>
+
+        <div v-if="filteredItems.length === 0" style="text-align:center; color:#666; margin-top:30px;">
+            <p>Keine Getränke in dieser Kategorie.</p>
+        </div>
+    </div>
+
+    <div class="add-panel">
+        <input type="text" v-model="newItemName" placeholder="Neues Getränk..." class="input-dark">
+        <select v-model="newItemCat" class="input-dark" style="flex-grow:0; width: 100px;">
+            <option v-for="cat in categories.filter(c => c !== 'Alle')" :value="cat">{{ cat }}</option>
+        </select>
+        <button class="btn btn-add" @click="addNewItem">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
+</div>
+
+<script>
+    const { createApp } = Vue;
+
+    createApp({
+        data() {
+            return {
+                currentCategory: 'Alle',
+                categories: ['Alle', 'Alkohol', 'Alkoholfrei', 'Flaschen 1L', 'Klein 0.2L', 'Zubehör'],
+                newItemName: '',
+                newItemCat: 'Alkohol',
+                items: [
+                    // Start-Daten (Beispiel)
+                    { id: 1, name: 'Corona', count: 0, category: 'Alkohol', completed: false },
+                    { id: 2, name: 'Warsteiner', count: 0, category: 'Alkohol', completed: false },
+                    { id: 3, name: 'Red Bull', count: 0, category: 'Alkoholfrei', completed: false },
+                    { id: 4, name: 'Vodka 1L', count: 0, category: 'Flaschen 1L', completed: false },
+                    { id: 5, name: 'Wasser Still', count: 0, category: 'Alkoholfrei', completed: false },
+                ]
+            }
+        },
+        computed: {
+            filteredItems() {
+                if (this.currentCategory === 'Alle') {
+                    return this.items;
+                }
+                return this.items.filter(item => item.category === this.currentCategory);
+            }
+        },
+        methods: {
+            increment(item) {
+                item.count++;
+                item.completed = false; // Wenn man was ändert, ist es nicht mehr "fertig"
+                this.saveData();
+            },
+            decrement(item) {
+                if (item.count > 0) item.count--;
+                item.completed = false;
+                this.saveData();
+            },
+            resetCount(item) {
+                if(confirm('Zähler für ' + item.name + ' wirklich auf 0 setzen?')) {
+                    item.count = 0;
+                    item.completed = false;
+                    this.saveData();
+                }
+            },
+            toggleComplete(item) {
+                item.completed = !item.completed;
+                this.saveData();
+            },
+            addNewItem() {
+                if (this.newItemName.trim() === '') return;
+                
+                this.items.push({
+                    id: Date.now(), // Einzigartige ID basierend auf Zeit
+                    name: this.newItemName,
+                    count: 0,
+                    category: this.newItemCat,
+                    completed: false
+                });
+                
+                this.newItemName = '';
+                this.saveData();
+                alert('Gespeichert!');
+            },
+            saveData() {
+                // Speichert die Liste im Browser des Handys
+                localStorage.setItem('miaStockData', JSON.stringify(this.items));
+            },
+            loadData() {
+                const saved = localStorage.getItem('miaStockData');
+                if (saved) {
+                    this.items = JSON.parse(saved);
+                }
+            }
+        },
+        mounted() {
+            this.loadData();
+        }
+    }).mount('#app');
+</script>
+
+</body>
+</html>
