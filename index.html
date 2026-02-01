@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mia Stock v5</title>
+    <title>Mia Stock v6</title>
     <link rel="manifest" href="manifest.json">
     
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -11,20 +11,20 @@
     
     <style>
         :root {
-            /* Variables */
             --bg-color: #f2f2f7;
             --card-bg: #ffffff;
             --text-primary: #1c1c1e;
             --text-secondary: #8e8e93;
             --accent: #007aff;
             --danger: #ff3b30;
-            --danger-bg: #ffe5e5; /* Helles Rot für Delete Mode */
+            --danger-bg: #ffe5e5;
             --warning: #ff9500;
             --success: #34c759;
             --input-bg: #e5e5ea;
             --bar-tab-bg: #d1d1d6;
             --shadow: 0 2px 8px rgba(0,0,0,0.08);
             --radius: 12px;
+            --group-header-bg: #e5e5ea;
         }
 
         [data-theme="dark"] {
@@ -34,12 +34,13 @@
             --text-secondary: #98989f;
             --accent: #0a84ff;
             --danger: #ff453a;
-            --danger-bg: #2c0b0b; /* Dunkles Rot für Delete Mode */
+            --danger-bg: #2c0b0b;
             --warning: #ff9f0a;
             --success: #30d158;
             --input-bg: #2c2c2e;
             --bar-tab-bg: #3a3a3c;
             --shadow: 0 4px 12px rgba(0,0,0,0.4);
+            --group-header-bg: #121212;
         }
 
         body {
@@ -47,8 +48,9 @@
             color: var(--text-primary);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             margin: 0; padding: 0;
-            padding-bottom: 140px; 
+            padding-bottom: 160px; /* Mehr Platz unten */
             overscroll-behavior-y: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         /* --- HEADER --- */
@@ -62,37 +64,35 @@
         .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         h1 { margin: 0; font-size: 1.4rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;}
 
-        /* Bar Tabs */
-        .bar-tabs {
+        /* Scrollbare Listen (Bars & Kategorien) */
+        .scroll-row {
             display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px;
-            scrollbar-width: none;
+            scrollbar-width: none; align-items: center;
         }
-        .bar-tabs::-webkit-scrollbar { display: none; }
+        .scroll-row::-webkit-scrollbar { display: none; }
 
-        .bar-tab {
+        /* Tabs Styles */
+        .tab-btn {
             background: var(--bar-tab-bg); color: var(--text-secondary);
             padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
-            white-space: nowrap; border: none; cursor: pointer; opacity: 0.7;
+            white-space: nowrap; border: none; cursor: pointer; opacity: 0.8; flex-shrink: 0;
         }
-        .bar-tab.active {
+        .tab-btn.active {
             background: var(--accent); color: white; opacity: 1; box-shadow: 0 0 10px rgba(0,122,255,0.4);
         }
-        .bar-manage-btn {
+        .manage-btn {
             background: transparent; border: 1px solid var(--text-secondary); color: var(--text-primary);
-            width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+            width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer;
         }
 
-        /* --- KATEGORIEN --- */
-        .filters {
-            display: flex; gap: 8px; overflow-x: auto; padding: 10px 15px;
-            scrollbar-width: none; background: var(--bg-color);
-        }
-        .filter-pill {
-            background: var(--card-bg); color: var(--text-secondary); border: 1px solid transparent;
-            padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; white-space: nowrap; cursor: pointer;
-        }
-        .filter-pill.active {
-            background: var(--card-bg); color: var(--accent); border-color: var(--accent);
+        /* --- KATEGORIE GRUPPEN HEADER --- */
+        .group-header {
+            background: var(--group-header-bg);
+            color: var(--text-secondary);
+            font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;
+            padding: 8px 15px; margin-top: 20px; margin-bottom: 10px;
+            border-radius: 8px; position: sticky; top: 125px; /* Klebt unter dem Header */
+            z-index: 90; opacity: 0.9; backdrop-filter: blur(5px);
         }
 
         /* --- KARTE --- */
@@ -106,37 +106,23 @@
             box-shadow: var(--shadow);
             display: flex; flex-direction: column; gap: 8px;
             border-left: 4px solid transparent;
-            min-height: 85px; /* Damit die Höhe beim Wechseln nicht springt */
+            min-height: 85px; 
             justify-content: center;
             transition: background-color 0.2s;
         }
 
-        /* Styles für den Delete-Modus */
-        .card.delete-mode {
-            background-color: var(--danger-bg);
-            border-left-color: var(--danger);
-        }
-
-        .card.active-count {
-            border-left-color: var(--accent);
-            background: linear-gradient(90deg, rgba(0,122,255,0.05) 0%, rgba(0,0,0,0) 100%);
-        }
-
+        .card.delete-mode { background-color: var(--danger-bg); border-left-color: var(--danger); }
+        .card.active-count { border-left-color: var(--accent); background: linear-gradient(90deg, rgba(0,122,255,0.05) 0%, rgba(0,0,0,0) 100%); }
         .card.completed { opacity: 0.5; border-left-color: var(--success); }
 
-        .card-header {
-            font-weight: 700; font-size: 1rem; color: var(--text-primary);
-            word-wrap: break-word;
-        }
+        .card-header { font-weight: 700; font-size: 1rem; color: var(--text-primary); word-wrap: break-word; line-height: 1.3; }
+        .size-tag { font-weight: 400; color: var(--text-secondary); font-size: 0.9rem; margin-left: 5px; }
 
         .card-controls { display: flex; justify-content: space-between; align-items: center; }
-
-        /* Button Gruppen */
         .btn-group { display: flex; align-items: center; gap: 6px; }
 
         .btn {
-            width: 38px; height: 38px;
-            border: none; border-radius: 8px;
+            width: 38px; height: 38px; border: none; border-radius: 8px;
             font-size: 1rem; display: flex; align-items: center; justify-content: center;
             cursor: pointer; transition: transform 0.1s;
         }
@@ -144,48 +130,37 @@
 
         .btn-trash { background: transparent; color: var(--text-secondary); width: 30px;}
         .btn-trash:active { color: var(--danger); }
-        
         .btn-reset { background: var(--input-bg); color: var(--warning); }
         .btn-minus { background: var(--input-bg); color: var(--text-primary); }
         .btn-plus { background: var(--accent); color: white; }
         .btn-check { background: var(--input-bg); color: var(--text-secondary); }
         .btn-check.is-done { background: var(--success); color: white; }
 
-        /* DELETE MODE BUTTONS */
-        .delete-text {
-            color: var(--danger); font-weight: bold; text-align: center; flex-grow: 1;
-            font-size: 0.95rem; text-transform: uppercase;
-        }
-        .btn-confirm-delete {
-            background: var(--danger); color: white; width: 38px; height: 38px;
-        }
-        .btn-cancel-delete {
-            background: var(--input-bg); color: var(--text-primary); width: 38px; height: 38px;
-        }
+        /* Delete Mode UI */
+        .delete-text { color: var(--danger); font-weight: bold; text-align: center; flex-grow: 1; font-size: 0.95rem; text-transform: uppercase; }
+        .btn-confirm-delete { background: var(--danger); color: white; width: 38px; height: 38px; }
+        .btn-cancel-delete { background: var(--input-bg); color: var(--text-primary); width: 38px; height: 38px; }
 
-        .count-display {
-            font-size: 1.4rem; font-weight: 800; color: var(--text-primary);
-            min-width: 40px; text-align: center;
-        }
+        .count-display { font-size: 1.4rem; font-weight: 800; color: var(--text-primary); min-width: 40px; text-align: center; }
 
         /* --- FOOTER INPUT (FIXED) --- */
         .add-panel {
             position: fixed; bottom: 0; left: 0; width: 100%;
             background: var(--card-bg);
-            padding: 10px 15px 25px 15px;
+            padding: 10px 15px 30px 15px;
             border-top: 1px solid var(--input-bg);
-            display: flex; gap: 8px; align-items: center;
+            display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
             z-index: 200; box-sizing: border-box;
         }
 
         .input-clean {
             background: var(--input-bg); border: none; color: var(--text-primary);
-            padding: 10px; border-radius: 8px; flex: 1; outline: none; min-width: 0;
+            padding: 10px; border-radius: 8px; flex: 1; outline: none; min-width: 100px;
         }
         
         .input-select {
             background: var(--input-bg); border: none; color: var(--text-primary);
-            padding: 0 5px; border-radius: 8px; outline: none; width: 85px; height: 40px; font-size: 0.85rem;
+            padding: 0 5px; border-radius: 8px; outline: none; height: 40px; font-size: 0.85rem;
         }
 
         .btn-add {
@@ -194,22 +169,30 @@
             font-size: 1.2rem; flex-shrink: 0;
         }
 
-        /* Modal */
+        /* --- MODAL --- */
         .modal-overlay {
             position: fixed; top:0; left:0; width:100%; height:100%;
             background: rgba(0,0,0,0.8); z-index: 500;
             display: flex; align-items: center; justify-content: center;
         }
-        .modal {
-            background: var(--card-bg); padding: 20px; border-radius: var(--radius); width: 85%; max-width: 350px;
-        }
+        .modal { background: var(--card-bg); padding: 20px; border-radius: var(--radius); width: 85%; max-width: 350px; }
+        .modal h3 { margin-top:0; margin-bottom: 15px; }
         .modal-btn { 
             width: 100%; padding: 12px; margin-top: 10px; border: none; 
             border-radius: 8px; font-weight: bold; cursor: pointer;
         }
         .btn-close { background: var(--input-bg); color: var(--text-primary); }
         .btn-save { background: var(--accent); color: white; }
-        .btn-danger { background: var(--danger); color: white; margin-top: 20px;}
+        
+        /* Danger Button with Hold/Confirm logic */
+        .btn-danger { background: var(--input-bg); color: var(--danger); border: 1px solid var(--danger); transition: all 0.2s;}
+        .btn-danger.confirm-state { background: var(--danger); color: white; }
+
+        /* Reset Box unten */
+        .reset-box {
+            margin: 40px 0 20px 0; text-align: center;
+            display: flex; justify-content: center; gap: 10px;
+        }
     </style>
 </head>
 <body>
@@ -222,116 +205,156 @@
                 <i class="fas" :class="isDark ? 'fa-sun' : 'fa-moon'"></i>
             </button>
         </div>
-        <div class="bar-tabs">
+        
+        <div class="scroll-row">
             <button 
                 v-for="(bar, index) in bars" 
                 :key="bar.id"
-                class="bar-tab"
+                class="tab-btn"
                 :class="{ active: activeBarIndex === index }"
                 @click="switchBar(index)">
                 {{ bar.name }}
             </button>
-            <button class="bar-manage-btn" @click="showBarModal = true"><i class="fas fa-pen"></i></button>
+            <button class="manage-btn" @click="openBarModal"><i class="fas fa-pen"></i></button>
         </div>
     </header>
 
-    <div class="filters">
-        <button 
-            v-for="cat in categories" 
-            :key="cat"
-            class="filter-pill"
-            :class="{ active: currentCategory === cat }"
-            @click="currentCategory = cat">
-            {{ cat }}
-        </button>
+    <div style="background: var(--bg-color); padding: 10px 15px;">
+        <div class="scroll-row">
+            <button 
+                v-for="cat in categories" 
+                :key="cat"
+                class="tab-btn"
+                style="background: var(--card-bg);"
+                :class="{ active: currentCategory === cat }"
+                @click="currentCategory = cat">
+                {{ cat }}
+            </button>
+            <button class="manage-btn" @click="openCatModal"><i class="fas fa-pen"></i></button>
+        </div>
     </div>
 
     <div class="item-list">
-        <div v-for="item in filteredItems" :key="item.id" 
-             class="card" 
-             :class="{ 
-                completed: item.completed, 
-                'active-count': item.count > 0 && deleteModeId !== item.id,
-                'delete-mode': deleteModeId === item.id 
-             }">
+        
+        <template v-for="(groupItems, groupName) in displayedGroups" :key="groupName">
             
-            <template v-if="deleteModeId !== item.id">
-                <div class="card-header">{{ item.name }}</div>
-                <div class="card-controls">
-                    <div class="btn-group">
-                        <button class="btn btn-trash" @click="initDelete(item)">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                        <button class="btn btn-reset" @click="resetCount(item)">
-                            <i class="fas fa-rotate-left"></i>
-                        </button>
-                        <button class="btn btn-minus" @click="decrement(item)">
-                            <i class="fas fa-minus"></i>
-                        </button>
-                    </div>
-                    <div class="count-display" v-if="!item.completed">{{ item.count }}</div>
-                    <div class="count-display" v-else style="color:var(--success); font-size:1rem;">
-                        <i class="fas fa-check"></i>
-                    </div>
-                    <div class="btn-group">
-                        <button class="btn btn-plus" @click="increment(item)">
-                            <i class="fas fa-plus"></i>
-                        </button>
-                        <button class="btn btn-check" :class="{ 'is-done': item.completed }" @click="toggleComplete(item)">
-                            <i class="fas fa-check"></i>
-                        </button>
-                    </div>
-                </div>
-            </template>
+            <div v-if="currentCategory === 'Alle' && groupItems.length > 0" class="group-header">
+                {{ groupName }}
+            </div>
 
+            <div v-for="item in groupItems" :key="item.id" 
+                 class="card" 
+                 :class="{ 
+                    completed: item.completed, 
+                    'active-count': item.count > 0 && deleteModeId !== item.id,
+                    'delete-mode': deleteModeId === item.id 
+                 }">
+                
+                <template v-if="deleteModeId !== item.id">
+                    <div class="card-header">
+                        {{ item.name }} 
+                    </div>
+                    <div class="card-controls">
+                        <div class="btn-group">
+                            <button class="btn btn-trash" @click="initDelete(item)"><i class="fas fa-trash"></i></button>
+                            <button class="btn btn-reset" @click="resetCount(item)"><i class="fas fa-rotate-left"></i></button>
+                            <button class="btn btn-minus" @click="decrement(item)"><i class="fas fa-minus"></i></button>
+                        </div>
+                        <div class="count-display" v-if="!item.completed">{{ item.count }}</div>
+                        <div class="count-display" v-else style="color:var(--success); font-size:1rem;"><i class="fas fa-check"></i></div>
+                        <div class="btn-group">
+                            <button class="btn btn-plus" @click="increment(item)"><i class="fas fa-plus"></i></button>
+                            <button class="btn btn-check" :class="{ 'is-done': item.completed }" @click="toggleComplete(item)"><i class="fas fa-check"></i></button>
+                        </div>
+                    </div>
+                </template>
+
+                <template v-else>
+                    <div class="card-controls" style="width: 100%;">
+                        <button class="btn btn-confirm-delete" @click="confirmDelete(item)"><i class="fas fa-trash"></i></button>
+                        <div class="delete-text">Wirklich löschen?</div>
+                        <button class="btn btn-cancel-delete" @click="cancelDelete"><i class="fas fa-times"></i></button>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <div v-if="isListEmpty" style="text-align:center; padding: 40px; color:var(--text-secondary);">
+            <p>Nichts gefunden.</p>
+        </div>
+
+        <div class="reset-box">
+            <template v-if="!resetBarMode">
+                <button @click="resetBarMode = true" style="background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 10px 20px; border-radius: 20px;">
+                    <i class="fas fa-bomb"></i> Bar "{{ activeBarName }}" nullen
+                </button>
+            </template>
             <template v-else>
-                <div class="card-controls" style="width: 100%;">
-                    <button class="btn btn-confirm-delete" @click="confirmDelete(item)">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                    
-                    <div class="delete-text">Wirklich löschen?</div>
-                    
-                    <button class="btn btn-cancel-delete" @click="cancelDelete">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
+                <button @click="resetAllInBar" style="background: var(--danger); color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight:bold;">
+                    <i class="fas fa-check"></i> Ja, alles löschen
+                </button>
+                <button @click="resetBarMode = false" style="background: var(--input-bg); color: var(--text-primary); border: none; padding: 10px 20px; border-radius: 20px;">
+                    <i class="fas fa-times"></i> Abbruch
+                </button>
             </template>
-
-        </div>
-
-        <div v-if="filteredItems.length === 0" style="text-align:center; padding: 40px; color:var(--text-secondary);">
-            <p>Keine Getränke in "{{ currentCategory }}"</p>
-        </div>
-
-        <div style="margin: 30px 0; text-align: center;">
-            <button @click="resetAllInBar" style="background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 10px 20px; border-radius: 20px;">
-                <i class="fas fa-bomb"></i> Ganze Bar zurücksetzen (0)
-            </button>
-        </div>
-    </div>
-
-    <div v-if="showBarModal" class="modal-overlay" @click.self="showBarModal = false">
-        <div class="modal">
-            <h3>Bar Verwalten</h3>
-            <input v-model="newBarName" placeholder="Name der neuen Bar..." class="input-clean" style="width:90%; margin-bottom:10px;">
-            <button class="modal-btn btn-save" @click="addBar">Bar Hinzufügen</button>
-            <br><br>
-            <p style="font-size:0.9rem; color:#888;">Aktuelle Bar: <strong>{{ activeBarName }}</strong></p>
-            <button v-if="bars.length > 1" class="modal-btn btn-danger" @click="deleteCurrentBar">Diese Bar löschen</button>
-            <button class="modal-btn btn-close" @click="showBarModal = false">Schließen</button>
         </div>
     </div>
 
     <div class="add-panel">
-        <input type="text" v-model="newItemName" placeholder="Getränk..." class="input-clean">
-        <select v-model="newItemCat" class="input-select">
-            <option v-for="cat in categories.filter(c => c !== 'Alle')" :value="cat">{{ cat }}</option>
-        </select>
-        <button class="btn-add" @click="addNewItem">
-            <i class="fas fa-plus"></i>
-        </button>
+        <div style="display:flex; width:100%; gap:8px; margin-bottom: 8px;">
+            <input type="text" v-model="newItemName" placeholder="Getränk Name..." class="input-clean">
+        </div>
+        <div style="display:flex; width:100%; gap:8px;">
+            <select v-model="newItemSize" class="input-select" style="width: 80px;">
+                <option value="">Größe</option>
+                <option value="0.2L">0.2L</option>
+                <option value="0.33L">0.33L</option>
+                <option value="0.5L">0.5L</option>
+                <option value="0.7L">0.7L</option>
+                <option value="1.0L">1.0L</option>
+            </select>
+            <select v-model="newItemCat" class="input-select" style="flex-grow:1;">
+                <option v-for="cat in categories.filter(c => c !== 'Alle')" :value="cat">{{ cat }}</option>
+            </select>
+            <button class="btn-add" @click="addNewItem"><i class="fas fa-plus"></i></button>
+        </div>
     </div>
+
+    <div v-if="modals.bar" class="modal-overlay" @click.self="modals.bar = false">
+        <div class="modal">
+            <h3>Bars Verwalten</h3>
+            <input v-model="newBarName" placeholder="Neue Bar Name..." class="input-clean" style="width:90%; margin-bottom:10px;">
+            <button class="modal-btn btn-save" @click="addBar">Hinzufügen</button>
+            
+            <div style="margin-top:20px; border-top:1px solid #333; padding-top:10px;">
+                <p style="font-size:0.9rem; color:#888;">Aktuell: <strong>{{ activeBarName }}</strong></p>
+                <button v-if="bars.length > 1" 
+                        class="modal-btn btn-danger" 
+                        :class="{ 'confirm-state': deleteBarConfirm }"
+                        @click="handleDeleteBar">
+                    {{ deleteBarConfirm ? 'Sicher? Nochmal tippen!' : 'Diese Bar löschen' }}
+                </button>
+            </div>
+            <button class="modal-btn btn-close" @click="modals.bar = false">Schließen</button>
+        </div>
+    </div>
+
+    <div v-if="modals.cat" class="modal-overlay" @click.self="modals.cat = false">
+        <div class="modal">
+            <h3>Kategorien Verwalten</h3>
+            <input v-model="newCatName" placeholder="Neue Kategorie..." class="input-clean" style="width:90%; margin-bottom:10px;">
+            <button class="modal-btn btn-save" @click="addCategory">Hinzufügen</button>
+            
+            <div style="margin-top:20px; max-height: 200px; overflow-y:auto;">
+                <div v-for="cat in categories.filter(c => c !== 'Alle')" :key="cat" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #333;">
+                    <span>{{ cat }}</span>
+                    <button @click="deleteCategory(cat)" style="background:transparent; color:var(--danger); border:none;"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+            <button class="modal-btn btn-close" @click="modals.cat = false">Schließen</button>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -341,14 +364,23 @@
         data() {
             return {
                 isDark: true,
-                showBarModal: false,
-                currentCategory: 'Alle',
-                deleteModeId: null, // Speichert die ID des Items, das gerade gelöscht werden soll
-                categories: ['Alle', 'Spirituosen', 'Alkohol', 'Alkoholfrei', 'Flaschen 1L', 'Klein 0.2L', 'Zubehör'],
+                modals: { bar: false, cat: false },
+                resetBarMode: false,
+                deleteBarConfirm: false,
                 
+                deleteModeId: null,
+
+                currentCategory: 'Alle',
+                // Kategorien sind jetzt dynamisch und editierbar
+                categories: ['Alle', 'Spirituosen', 'Flaschen 1L', 'Klein 0.2L', 'Alkoholfrei', 'Zubehör'],
+                
+                // Add Item Data
                 newItemName: '',
                 newItemCat: 'Spirituosen',
+                newItemSize: '', // Neu: Größe
+                
                 newBarName: '',
+                newCatName: '',
 
                 activeBarIndex: 0,
                 bars: [
@@ -361,10 +393,39 @@
         },
         computed: {
             activeBarName() { return this.bars[this.activeBarIndex].name; },
-            filteredItems() {
-                const currentItems = this.bars[this.activeBarIndex].items;
-                if (this.currentCategory === 'Alle') return currentItems;
-                return currentItems.filter(item => item.category === this.currentCategory);
+            
+            // Logik für die Anzeige: Gruppiert oder Einzeln
+            displayedGroups() {
+                const items = this.bars[this.activeBarIndex].items;
+                
+                if (this.currentCategory !== 'Alle') {
+                    // Wenn eine Kategorie gewählt ist, geben wir nur ein Objekt mit dieser Kategorie zurück
+                    return { [this.currentCategory]: items.filter(i => i.category === this.currentCategory) };
+                }
+
+                // Wenn "Alle" gewählt ist, gruppieren wir nach der Reihenfolge der Kategorien
+                const groups = {};
+                
+                // Wir iterieren durch die `categories` Liste, damit die Reihenfolge stimmt!
+                this.categories.forEach(cat => {
+                    if (cat === 'Alle') return;
+                    const catItems = items.filter(i => i.category === cat);
+                    if (catItems.length > 0) {
+                        groups[cat] = catItems;
+                    }
+                });
+
+                // Items ohne gültige Kategorie (falls man eine gelöscht hat)
+                const uncategorized = items.filter(i => !this.categories.includes(i.category));
+                if (uncategorized.length > 0) {
+                    groups['Sonstiges'] = uncategorized;
+                }
+
+                return groups;
+            },
+            isListEmpty() {
+                const groups = this.displayedGroups;
+                return Object.values(groups).every(arr => arr.length === 0);
             }
         },
         methods: {
@@ -380,88 +441,113 @@
             },
             switchBar(index) {
                 this.activeBarIndex = index;
-                this.deleteModeId = null; // Reset delete mode beim Wechseln
+                this.deleteModeId = null;
+                this.resetBarMode = false;
                 this.saveData();
             },
             
-            // --- ITEM ACTIONEN ---
-            increment(item) {
-                item.count++; item.completed = false; this.saveData();
+            // --- MODALS ---
+            openBarModal() { this.modals.bar = true; this.deleteBarConfirm = false; },
+            openCatModal() { this.modals.cat = true; },
+
+            // --- CATEGORY MANAGEMENT ---
+            addCategory() {
+                if(this.newCatName.trim() === '') return;
+                this.categories.push(this.newCatName);
+                this.newCatName = '';
+                this.saveData();
             },
-            decrement(item) {
-                if (item.count > 0) item.count--; item.completed = false; this.saveData();
-            },
-            resetCount(item) {
-                item.count = 0; item.completed = false; this.saveData();
-            },
-            toggleComplete(item) {
-                item.completed = !item.completed; this.saveData();
+            deleteCategory(cat) {
+                // Inline Delete ohne Browser Popup
+                this.categories = this.categories.filter(c => c !== cat);
+                if(this.currentCategory === cat) this.currentCategory = 'Alle';
+                this.saveData();
             },
 
-            // --- NEUE LÖSCH LOGIK (OHNE POPUP) ---
-            initDelete(item) {
-                // Setzt dieses Item in den "Lösch-Modus"
-                this.deleteModeId = item.id;
-            },
-            cancelDelete() {
-                // Bricht ab, normale Ansicht wiederherstellen
-                this.deleteModeId = null;
-            },
+            // --- ITEM ACTIONS ---
+            increment(item) { item.count++; item.completed = false; this.saveData(); },
+            decrement(item) { if(item.count > 0) item.count--; item.completed = false; this.saveData(); },
+            resetCount(item) { item.count = 0; item.completed = false; this.saveData(); },
+            toggleComplete(item) { item.completed = !item.completed; this.saveData(); },
+
+            initDelete(item) { this.deleteModeId = item.id; },
+            cancelDelete() { this.deleteModeId = null; },
             confirmDelete(item) {
-                // Führt das Löschen endgültig durch
                 const bar = this.bars[this.activeBarIndex];
                 bar.items = bar.items.filter(i => i.id !== item.id);
                 this.deleteModeId = null;
                 this.saveData();
             },
 
-            // --- ADD / MANAGE ---
+            // --- ADD NEW ITEM ---
             addNewItem() {
                 if (this.newItemName.trim() === '') return;
+                
+                // Name zusammensetzen: "Cola" + "1.0L" -> "Cola 1.0L"
+                let finalName = this.newItemName;
+                if(this.newItemSize) {
+                    finalName += ` ${this.newItemSize}`;
+                }
+
                 const newItem = {
-                    id: Date.now(), name: this.newItemName, count: 0, category: this.newItemCat, completed: false
+                    id: Date.now(), 
+                    name: finalName, 
+                    count: 0, 
+                    category: this.newItemCat, 
+                    completed: false
                 };
                 this.bars[this.activeBarIndex].items.push(newItem);
                 this.newItemName = '';
+                this.newItemSize = ''; // Reset Size
                 this.saveData();
             },
+
+            // --- BAR MANAGEMENT (NO POPUPS) ---
             addBar() {
                 if(this.newBarName.trim() === '') return;
                 this.bars.push({ id: 'b' + Date.now(), name: this.newBarName, items: [] });
-                this.newBarName = ''; this.showBarModal = false; this.saveData();
+                this.newBarName = ''; this.modals.bar = false; this.saveData();
             },
-            deleteCurrentBar() {
-                if(confirm(`Bar "${this.activeBarName}" löschen?`)) { // Hier ist Popup ok, weil kritisch und selten
+            handleDeleteBar() {
+                if(!this.deleteBarConfirm) {
+                    this.deleteBarConfirm = true; // Erster Klick: Warnung
+                } else {
+                    // Zweiter Klick: Löschen
                     this.bars.splice(this.activeBarIndex, 1);
                     this.activeBarIndex = 0;
-                    this.showBarModal = false;
+                    this.modals.bar = false;
                     this.saveData();
                 }
             },
             resetAllInBar() {
-                if(confirm(`Alles in "${this.activeBarName}" auf Null?`)) {
-                    this.bars[this.activeBarIndex].items.forEach(item => { item.count = 0; item.completed = false; });
-                    this.saveData();
-                }
+                // Hier sind wir schon im "Sicher?" Modus (Buttons sichtbar)
+                this.bars[this.activeBarIndex].items.forEach(item => { item.count = 0; item.completed = false; });
+                this.resetBarMode = false;
+                this.saveData();
             },
 
             saveData() {
                 const dataToSave = { 
-                    bars: this.bars, theme: this.isDark, activeBarIndex: this.activeBarIndex
+                    bars: this.bars, 
+                    categories: this.categories, // Auch Kategorien speichern!
+                    theme: this.isDark, 
+                    activeBarIndex: this.activeBarIndex
                 };
-                localStorage.setItem('miaStockData_v4', JSON.stringify(dataToSave));
+                localStorage.setItem('miaStockData_v6', JSON.stringify(dataToSave));
             },
             loadData() {
-                const saved = localStorage.getItem('miaStockData_v4');
+                const saved = localStorage.getItem('miaStockData_v6');
                 if (saved) {
                     const parsed = JSON.parse(saved);
                     this.bars = parsed.bars;
                     this.isDark = parsed.theme;
                     this.activeBarIndex = parsed.activeBarIndex || 0;
+                    if(parsed.categories) this.categories = parsed.categories;
                 } else {
+                    // Start-Daten
                     this.bars[0].items = [
-                        { id: 1, name: 'Corona', count: 0, category: 'Alkohol', completed: false },
-                        { id: 2, name: 'Red Bull', count: 0, category: 'Alkoholfrei', completed: false }
+                        { id: 1, name: 'Corona 0.33L', count: 0, category: 'Alkohol', completed: false },
+                        { id: 2, name: 'Red Bull 0.25L', count: 0, category: 'Alkoholfrei', completed: false }
                     ];
                 }
                 this.applyTheme();
