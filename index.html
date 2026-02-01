@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mia Stock</title>
+    <title>Mia Stock v4</title>
     <link rel="manifest" href="manifest.json">
     
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
     <style>
-        /* --- DESIGN VARIABLEN --- */
         :root {
-            /* Light Mode */
+            /* Variables */
             --bg-color: #f2f2f7;
             --card-bg: #ffffff;
             --text-primary: #1c1c1e;
@@ -22,12 +21,11 @@
             --warning: #ff9500;
             --success: #34c759;
             --input-bg: #e5e5ea;
-            --shadow: 0 4px 12px rgba(0,0,0,0.05);
-            --radius-l: 20px;
-            --radius-m: 14px;
+            --bar-tab-bg: #d1d1d6;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+            --radius: 12px;
         }
 
-        /* Dark Mode */
         [data-theme="dark"] {
             --bg-color: #000000;
             --card-bg: #1c1c1e;
@@ -38,193 +36,203 @@
             --warning: #ff9f0a;
             --success: #30d158;
             --input-bg: #2c2c2e;
-            --shadow: 0 4px 12px rgba(0,0,0,0.3);
+            --bar-tab-bg: #3a3a3c;
+            --shadow: 0 4px 12px rgba(0,0,0,0.4);
         }
 
         body {
             background-color: var(--bg-color);
             color: var(--text-primary);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            margin: 0;
-            padding: 0;
-            padding-bottom: 120px; /* Mehr Platz unten für die Leiste */
-            transition: background-color 0.3s ease;
+            margin: 0; padding: 0;
+            padding-bottom: 140px; /* Platz für Footer */
+            overscroll-behavior-y: none; /* Kein Bouncen */
         }
 
+        /* --- HEADER & BAR SWITCHER --- */
         header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 20px 10px 20px;
-            background-color: var(--bg-color);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            background-color: var(--card-bg);
+            padding: 15px 15px 5px 15px;
+            position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
 
-        h1 { margin: 0; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px; }
-
-        .theme-toggle {
-            background: var(--input-bg);
-            border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            color: var(--text-primary);
-            font-size: 1.1rem;
-            cursor: pointer;
+        .top-row {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
         }
+        h1 { margin: 0; font-size: 1.4rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;}
 
-        /* --- FILTER TABS --- */
-        .filters {
-            display: flex;
-            overflow-x: auto;
-            padding: 10px 20px;
-            gap: 10px;
+        /* Bar Tabs */
+        .bar-tabs {
+            display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px;
             scrollbar-width: none;
         }
-        .filters::-webkit-scrollbar { display: none; }
+        .bar-tabs::-webkit-scrollbar { display: none; }
 
-        .filter-btn {
-            background: var(--card-bg);
-            color: var(--text-secondary);
-            border: none;
-            padding: 8px 18px;
-            border-radius: 30px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: var(--shadow);
-            white-space: nowrap;
+        .bar-tab {
+            background: var(--bar-tab-bg); color: var(--text-secondary);
+            padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
+            white-space: nowrap; border: none; cursor: pointer; opacity: 0.7;
         }
-        .filter-btn.active {
-            background: var(--text-primary);
-            color: var(--bg-color);
+        .bar-tab.active {
+            background: var(--accent); color: white; opacity: 1; box-shadow: 0 0 10px rgba(0,122,255,0.4);
+        }
+        .bar-manage-btn {
+            background: transparent; border: 1px solid var(--text-secondary); color: var(--text-primary);
+            width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
         }
 
-        /* --- LISTE --- */
-        .item-list { padding: 10px 20px; }
+        /* --- KATEGORIEN --- */
+        .filters {
+            display: flex; gap: 8px; overflow-x: auto; padding: 10px 15px;
+            scrollbar-width: none; background: var(--bg-color);
+        }
+        .filter-pill {
+            background: var(--card-bg); color: var(--text-secondary); border: 1px solid transparent;
+            padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; white-space: nowrap; cursor: pointer;
+        }
+        .filter-pill.active {
+            background: var(--card-bg); color: var(--accent); border-color: var(--accent);
+        }
+
+        /* --- KARTE (NEUES LAYOUT) --- */
+        .item-list { padding: 5px 15px; }
 
         .card {
             background-color: var(--card-bg);
-            margin-bottom: 15px;
-            border-radius: var(--radius-l);
-            padding: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            margin-bottom: 12px;
+            border-radius: var(--radius);
+            padding: 10px;
             box-shadow: var(--shadow);
+            display: flex; flex-direction: column; gap: 8px;
+            border-left: 4px solid transparent; /* Für Highlight */
+        }
+
+        /* Highlight wenn Count > 0 */
+        .card.active-count {
+            border-left-color: var(--accent);
+            background: linear-gradient(90deg, rgba(0,122,255,0.05) 0%, rgba(0,0,0,0) 100%);
         }
 
         .card.completed {
-            opacity: 0.5;
-            box-shadow: none;
-            border: 1px dashed var(--text-secondary);
-            background: transparent;
+            opacity: 0.5; border-left-color: var(--success);
         }
 
-        .info-col {
-            flex-grow: 1;
-            text-align: center;
-            padding: 0 5px;
-            overflow: hidden; /* Damit lange Namen nicht das Layout sprengen */
-        }
-        .name {
-            display: block;
-            font-weight: 600;
-            font-size: 1rem;
-            margin-bottom: 2px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .count {
-            font-size: 1.3rem;
-            font-weight: 800;
-            color: var(--accent);
+        .card-header {
+            font-weight: 700; font-size: 1rem; color: var(--text-primary);
+            word-wrap: break-word; /* Umbruch bei langen Namen */
         }
 
-        /* --- BUTTONS --- */
-        .btn-icon {
-            width: 42px;
-            height: 42px;
-            border: none;
-            border-radius: var(--radius-m);
-            font-size: 1.1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: transform 0.1s;
-        }
-        .btn-icon:active { transform: scale(0.95); }
-
-        /* Linke Gruppe (3 Buttons) */
-        .left-group {
-            display: flex; 
-            align-items: center; 
-            gap: 4px; /* Kleiner Abstand zwischen den Buttons */
+        .card-controls {
+            display: flex; justify-content: space-between; align-items: center;
         }
 
-        .btn-delete { background: transparent; color: var(--text-secondary); width: 32px; font-size: 0.9rem;}
-        .btn-delete:active { color: var(--danger); }
+        /* Button Gruppen */
+        .btn-group { display: flex; align-items: center; gap: 6px; }
 
-        .btn-reset { background: transparent; color: var(--text-secondary); width: 32px; font-size: 0.9rem;}
-        .btn-reset:active { color: var(--warning); }
-        
+        .btn {
+            width: 38px; height: 38px; /* Kleiner als vorher */
+            border: none; border-radius: 8px;
+            font-size: 1rem; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: transform 0.1s;
+        }
+        .btn:active { transform: scale(0.92); }
+
+        .btn-trash { background: transparent; color: var(--text-secondary); width: 30px;}
+        .btn-reset { background: var(--input-bg); color: var(--warning); }
         .btn-minus { background: var(--input-bg); color: var(--text-primary); }
-
-        /* Rechte Gruppe */
-        .right-group { display: flex; gap: 5px; }
-
+        
         .btn-plus { background: var(--accent); color: white; }
         .btn-check { background: var(--input-bg); color: var(--text-secondary); }
         .btn-check.is-done { background: var(--success); color: white; }
 
-        /* --- ADD NEW PANEL --- */
+        .count-display {
+            font-size: 1.4rem; font-weight: 800; color: var(--text-primary);
+            min-width: 40px; text-align: center;
+        }
+
+        /* --- FOOTER INPUT (FIXED) --- */
         .add-panel {
-            position: fixed;
-            bottom: 20px; left: 20px; right: 20px;
+            position: fixed; bottom: 0; left: 0; width: 100%;
             background: var(--card-bg);
-            padding: 10px;
-            border-radius: var(--radius-l);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-            display: flex; gap: 10px;
-            z-index: 200;
+            padding: 10px 15px 20px 15px; /* Unten mehr Padding für iPhone Home Bar */
+            border-top: 1px solid var(--input-bg);
+            display: flex; gap: 8px; align-items: center;
+            z-index: 200; box-sizing: border-box;
         }
 
         .input-clean {
             background: var(--input-bg); border: none; color: var(--text-primary);
-            padding: 12px; border-radius: var(--radius-m); flex-grow: 1; outline: none;
+            padding: 10px; border-radius: 8px; flex: 1; /* Nimmt restlichen Platz */
+            font-size: 0.95rem; outline: none; min-width: 0; /* Wichtig für Flexbox */
         }
         
         .input-select {
             background: var(--input-bg); border: none; color: var(--text-primary);
-            padding: 0 10px; border-radius: var(--radius-m); outline: none; width: 100px;
+            padding: 0 5px; border-radius: 8px; outline: none; 
+            width: 85px; height: 40px; font-size: 0.85rem;
         }
 
         .btn-add {
             background: var(--text-primary); color: var(--bg-color);
-            border: none; width: 50px; border-radius: var(--radius-m);
-            font-size: 1.2rem; cursor: pointer;
+            border: none; width: 40px; height: 40px; border-radius: 8px;
+            font-size: 1.2rem; flex-shrink: 0;
         }
+
+        /* Settings Modal (Simuliert) */
+        .modal-overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.8); z-index: 500;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .modal {
+            background: var(--card-bg); padding: 20px; border-radius: var(--radius); width: 85%;
+            max-width: 350px;
+        }
+        .modal h3 { margin-top:0; }
+        .modal-btn { 
+            width: 100%; padding: 12px; margin-top: 10px; border: none; 
+            border-radius: 8px; font-weight: bold; cursor: pointer;
+        }
+        .btn-close { background: var(--input-bg); color: var(--text-primary); }
+        .btn-save { background: var(--accent); color: white; }
+        .btn-danger { background: var(--danger); color: white; margin-top: 20px;}
+
     </style>
 </head>
 <body>
 
 <div id="app">
     <header>
-        <h1>Mia Stock</h1>
-        <button class="theme-toggle" @click="toggleTheme">
-            <i class="fas" :class="isDark ? 'fa-sun' : 'fa-moon'"></i>
-        </button>
+        <div class="top-row">
+            <h1>Mia Stock</h1>
+            <div style="display:flex; gap:10px;">
+                 <button class="btn" style="background:transparent; color:var(--text-primary)" @click="toggleTheme">
+                    <i class="fas" :class="isDark ? 'fa-sun' : 'fa-moon'"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="bar-tabs">
+            <button 
+                v-for="(bar, index) in bars" 
+                :key="bar.id"
+                class="bar-tab"
+                :class="{ active: activeBarIndex === index }"
+                @click="activeBarIndex = index">
+                {{ bar.name }}
+            </button>
+            <button class="bar-manage-btn" @click="showBarModal = true">
+                <i class="fas fa-pen"></i>
+            </button>
+        </div>
     </header>
 
     <div class="filters">
         <button 
             v-for="cat in categories" 
             :key="cat"
-            class="filter-btn"
+            class="filter-pill"
             :class="{ active: currentCategory === cat }"
             @click="currentCategory = cat">
             {{ cat }}
@@ -232,45 +240,70 @@
     </div>
 
     <div class="item-list">
-        <div v-for="item in filteredItems" :key="item.id" class="card" :class="{ completed: item.completed }">
+        <div v-for="item in filteredItems" :key="item.id" 
+             class="card" 
+             :class="{ completed: item.completed, 'active-count': item.count > 0 }">
             
-            <div class="left-group">
-                <button class="btn-icon btn-delete" @click="deleteItem(item)">
-                    <i class="fas fa-trash"></i>
-                </button>
-                <button class="btn-icon btn-reset" @click="resetCount(item)">
-                    <i class="fas fa-rotate-left"></i>
-                </button>
-                <button class="btn-icon btn-minus" @click="decrement(item)">
-                    <i class="fas fa-minus"></i>
-                </button>
+            <div class="card-header">
+                {{ item.name }}
             </div>
 
-            <div class="info-col">
-                <span class="name">{{ item.name }}</span>
-                <span class="count" v-if="!item.completed">{{ item.count }}</span>
-                <span class="count" v-else style="color:var(--success); font-size:1rem;">Fertig</span>
-            </div>
+            <div class="card-controls">
+                <div class="btn-group">
+                    <button class="btn btn-trash" @click="deleteItem(item)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <button class="btn btn-reset" @click="resetCount(item)">
+                        <i class="fas fa-rotate-left"></i>
+                    </button>
+                    <button class="btn btn-minus" @click="decrement(item)">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
 
-            <div class="right-group">
-                <button class="btn-icon btn-plus" @click="increment(item)">
-                    <i class="fas fa-plus"></i>
-                </button>
-                <button class="btn-icon btn-check" :class="{ 'is-done': item.completed }" @click="toggleComplete(item)">
+                <div class="count-display" v-if="!item.completed">
+                    {{ item.count }}
+                </div>
+                <div class="count-display" v-else style="color:var(--success); font-size:1rem;">
                     <i class="fas fa-check"></i>
-                </button>
-            </div>
+                </div>
 
+                <div class="btn-group">
+                    <button class="btn btn-plus" @click="increment(item)">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <button class="btn btn-check" :class="{ 'is-done': item.completed }" @click="toggleComplete(item)">
+                        <i class="fas fa-check"></i>
+                    </button>
+                </div>
+            </div>
         </div>
 
         <div v-if="filteredItems.length === 0" style="text-align:center; padding: 40px; color:var(--text-secondary);">
-            <i class="fas fa-glass-cheers" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.5;"></i>
-            <p>Nichts in dieser Kategorie.</p>
+            <p>Keine Getränke in "{{ currentCategory }}" für Bar "{{ activeBarName }}".</p>
+        </div>
+
+        <div style="margin: 30px 0; text-align: center;">
+            <button @click="resetAllInBar" style="background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 10px 20px; border-radius: 20px;">
+                <i class="fas fa-bomb"></i> Ganze Bar zurücksetzen (0)
+            </button>
+        </div>
+    </div>
+
+    <div v-if="showBarModal" class="modal-overlay" @click.self="showBarModal = false">
+        <div class="modal">
+            <h3>Bar Verwalten</h3>
+            <input v-model="newBarName" placeholder="Name der neuen Bar..." class="input-clean" style="width:90%; margin-bottom:10px;">
+            <button class="modal-btn btn-save" @click="addBar">Bar Hinzufügen</button>
+            <br><br>
+            <p style="font-size:0.9rem; color:#888;">Aktuelle Bar: <strong>{{ activeBarName }}</strong></p>
+            <button v-if="bars.length > 1" class="modal-btn btn-danger" @click="deleteCurrentBar">Diese Bar löschen</button>
+            <button class="modal-btn btn-close" @click="showBarModal = false">Schließen</button>
         </div>
     </div>
 
     <div class="add-panel">
-        <input type="text" v-model="newItemName" placeholder="Neu..." class="input-clean">
+        <input type="text" v-model="newItemName" placeholder="Getränk..." class="input-clean">
         <select v-model="newItemCat" class="input-select">
             <option v-for="cat in categories.filter(c => c !== 'Alle')" :value="cat">{{ cat }}</option>
         </select>
@@ -286,23 +319,36 @@
     createApp({
         data() {
             return {
-                isDark: true, 
+                isDark: true,
+                showBarModal: false,
                 currentCategory: 'Alle',
-                // Hier ist jetzt 'Spirituosen' dabei:
                 categories: ['Alle', 'Spirituosen', 'Alkohol', 'Alkoholfrei', 'Flaschen 1L', 'Klein 0.2L', 'Zubehör'],
+                
+                // Add Item Data
                 newItemName: '',
-                newItemCat: 'Spirituosen', // Standardauswahl beim Erstellen
-                items: [
-                    { id: 1, name: 'Corona', count: 0, category: 'Alkohol', completed: false },
-                    { id: 2, name: 'Vodka Gorbatschow', count: 0, category: 'Spirituosen', completed: false },
-                    { id: 3, name: 'Red Bull', count: 0, category: 'Alkoholfrei', completed: false },
+                newItemCat: 'Spirituosen',
+                newBarName: '',
+
+                // Multi-Bar Data Structure
+                activeBarIndex: 0,
+                bars: [
+                    { id: 'b1', name: 'Haupttheke', items: [] },
+                    { id: 'b2', name: 'DJ-Bar', items: [] },
+                    { id: 'b3', name: 'Absolut-Bar', items: [] },
+                    { id: 'b4', name: 'Terrasse', items: [] }
                 ]
             }
         },
         computed: {
+            // Hilfsvariable für aktuellen Bar Namen
+            activeBarName() {
+                return this.bars[this.activeBarIndex].name;
+            },
+            // Gibt nur die Items der aktuellen Bar zurück, die zur Kategorie passen
             filteredItems() {
-                if (this.currentCategory === 'Alle') return this.items;
-                return this.items.filter(item => item.category === this.currentCategory);
+                const currentItems = this.bars[this.activeBarIndex].items;
+                if (this.currentCategory === 'Alle') return currentItems;
+                return currentItems.filter(item => item.category === this.currentCategory);
             }
         },
         methods: {
@@ -316,6 +362,7 @@
                 if (this.isDark) htmlTag.setAttribute('data-theme', 'dark');
                 else htmlTag.removeAttribute('data-theme');
             },
+            // --- ITEM LOGIC ---
             increment(item) {
                 item.count++;
                 item.completed = false; 
@@ -332,9 +379,9 @@
                 this.saveData();
             },
             deleteItem(item) {
-                // Sicherheitsabfrage
-                if(confirm(`Möchtest du "${item.name}" wirklich komplett aus der Liste löschen?`)) {
-                    this.items = this.items.filter(i => i.id !== item.id);
+                if(confirm(`"${item.name}" wirklich aus ${this.activeBarName} löschen?`)) {
+                    const bar = this.bars[this.activeBarIndex];
+                    bar.items = bar.items.filter(i => i.id !== item.id);
                     this.saveData();
                 }
             },
@@ -344,30 +391,74 @@
             },
             addNewItem() {
                 if (this.newItemName.trim() === '') return;
-                this.items.push({
+                
+                const newItem = {
                     id: Date.now(), 
                     name: this.newItemName,
                     count: 0,
                     category: this.newItemCat,
                     completed: false
-                });
+                };
+
+                // Fügt es NUR zur aktuellen Bar hinzu
+                this.bars[this.activeBarIndex].items.push(newItem);
+                
                 this.newItemName = '';
                 this.saveData();
             },
+            
+            // --- BAR MANAGEMENT ---
+            addBar() {
+                if(this.newBarName.trim() === '') return;
+                this.bars.push({
+                    id: 'b' + Date.now(),
+                    name: this.newBarName,
+                    items: []
+                });
+                this.newBarName = '';
+                this.showBarModal = false;
+                this.saveData();
+            },
+            deleteCurrentBar() {
+                if(confirm(`Willst du die Bar "${this.activeBarName}" und alle Listen löschen?`)) {
+                    this.bars.splice(this.activeBarIndex, 1);
+                    this.activeBarIndex = 0;
+                    this.showBarModal = false;
+                    this.saveData();
+                }
+            },
+            resetAllInBar() {
+                if(confirm(`Alles in "${this.activeBarName}" auf Null setzen?`)) {
+                    this.bars[this.activeBarIndex].items.forEach(item => {
+                        item.count = 0;
+                        item.completed = false;
+                    });
+                    this.saveData();
+                }
+            },
+
+            // --- STORAGE ---
             saveData() {
-                const dataToSave = { items: this.items, theme: this.isDark };
-                localStorage.setItem('miaStockData_v3', JSON.stringify(dataToSave));
+                const dataToSave = { 
+                    bars: this.bars, 
+                    theme: this.isDark,
+                    activeBarIndex: this.activeBarIndex
+                };
+                localStorage.setItem('miaStockData_v4', JSON.stringify(dataToSave));
             },
             loadData() {
-                const saved = localStorage.getItem('miaStockData_v3');
+                const saved = localStorage.getItem('miaStockData_v4');
                 if (saved) {
                     const parsed = JSON.parse(saved);
-                    if (parsed.items) {
-                        this.items = parsed.items;
-                        this.isDark = parsed.theme;
-                    } else {
-                        this.items = parsed;
-                    }
+                    this.bars = parsed.bars;
+                    this.isDark = parsed.theme;
+                    this.activeBarIndex = parsed.activeBarIndex || 0;
+                } else {
+                    // Start-Daten falls neu
+                    this.bars[0].items = [
+                        { id: 1, name: 'Corona', count: 0, category: 'Alkohol', completed: false },
+                        { id: 2, name: 'Red Bull', count: 0, category: 'Alkoholfrei', completed: false }
+                    ];
                 }
                 this.applyTheme();
             }
